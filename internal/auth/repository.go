@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"chat-app/internal/models"
+	"github.com/codingminions/Whatsapp-Lite/internal/models"
 )
 
 // Repository errors
@@ -45,8 +45,8 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *models.User) 
 	query := `
 		INSERT INTO users (username, email, password_hash, status, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
-	`
+		RETURNING id 
+		`
 
 	err := r.db.QueryRowContext(
 		ctx,

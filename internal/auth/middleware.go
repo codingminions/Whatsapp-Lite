@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"chat-app/internal/models"
-	"chat-app/pkg/logger"
-	"chat-app/pkg/token"
+	"github.com/codingminions/Whatsapp-Lite/internal/models"
+	"github.com/codingminions/Whatsapp-Lite/pkg/logger"
+	"github.com/codingminions/Whatsapp-Lite/pkg/token"
 )
 
 // contextKey is a custom type for context keys to avoid collisions
