@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-sidebar">
+            <div class="user-profile">
+                <div class="avatar">
+                    <span id="userInitial"></span>
+                </div>
+                <div class="user-info">
+                    <h3 id="username">Loading...</h3>
+                    <div class="status online">Online</div>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button id="logoutBtn" class="btn btn-outline">Logout</button>
+            </div>
+        </div>
+
+        <div class="chat-main">
+            <div class="chat-header">
+                <h2>Welcome to Chat App</h2>
+            </div>
+
+            <div class="messages" id="messageArea">
+                <div class="system-message">
+                    <p>You've successfully logged in!</p>
+                    <p>This is a demonstration of a simple authentication system.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if user is authenticated
+            const accessToken = localStorage.getItem('access_token');
+            const username = localStorage.getItem('username');
+            const expiresAt = localStorage.getItem('expires_at');
+
+            if (!accessToken || !username) {
+                // Not authenticated, redirect to login
+                window.location.href = '/login';
+                return;
+            }
+
+            // Check if token is expired
+            if (new Date(expiresAt) < new Date()) {
+                // Token expired, try to refresh
+                refreshToken();
+            }
+
+            // Update UI with user info
+            document.getElementById('username').textContent = username;
+            document.getElementById('userInitial').textContent = username.charAt(0).toUpperCase();
+
+            // Setup logout button
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        });
+
+        async function refreshToken() {
+            try {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (!refreshToken) {
+                    throw new Error('No refresh token available');
+                }
+
+                const response = await fetch('/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to refresh token');
+                }
+
+                const data = await response.json();
+
+                // Update tokens in localStorage
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('refresh_token', data.refresh_token);
+                localStorage.setItem('expires_at', data.expires_at);
+
+                // Update cookie
+                document.cookie = `auth_token=${data.access_token}; path=/; max-age=900`; // 15 minutes
+
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                // Redirect to login
+                window.location.href = '/login';
+            }
+        }
+
+        async function logout() {
+            try {
+                const accessToken = localStorage.getItem('access_token');
+
+                // Send logout request
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                // Clear localStorage
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('username');
+                localStorage.removeItem('expires_at');
+
+                // Clear cookie
+                document.cookie = 'auth_token=; path=/; max-age=0';
+
+                // Redirect to home
+                window.location.href = '/';
+
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Still redirect to home even if logout request fails
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+
+</html>
