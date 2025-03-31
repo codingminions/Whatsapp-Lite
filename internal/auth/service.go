@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"chat-app/internal/models"
-	"chat-app/pkg/logger"
-	"chat-app/pkg/token"
+	"github.com/codingminions/Whatsapp-Lite/internal/models"
+	"github.com/codingminions/Whatsapp-Lite/pkg/logger"
+	"github.com/codingminions/Whatsapp-Lite/pkg/token"
 )
 
 // Service errors

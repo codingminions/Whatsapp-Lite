@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"chat-app/internal/models"
-	"chat-app/pkg/logger"
-	"chat-app/pkg/validator"
+	"github.com/codingminions/Whatsapp-Lite/internal/models"
+	"github.com/codingminions/Whatsapp-Lite/pkg/logger"
+	"github.com/codingminions/Whatsapp-Lite/pkg/validator"
 )
 
 // Handler handles auth-related HTTP requests
@@ -220,3 +220,4 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// Send response
 	w.WriteHeader(http.StatusNoContent)
+}
