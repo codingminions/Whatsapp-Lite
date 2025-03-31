@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"chat-app/configs"
-	"chat-app/internal/auth"
-	"chat-app/pkg/database"
-	"chat-app/pkg/logger"
-	"chat-app/pkg/token"
-	"chat-app/pkg/validator"
+	"github.com/codingminions/Whatsapp-Lite/configs"
+	"github.com/codingminions/Whatsapp-Lite/internal/auth"
+	"github.com/codingminions/Whatsapp-Lite/pkg/database"
+	"github.com/codingminions/Whatsapp-Lite/pkg/logger"
+	"github.com/codingminions/Whatsapp-Lite/pkg/token"
+	"github.com/codingminions/Whatsapp-Lite/pkg/validator"
 )
 
 func main() {
@@ -92,11 +92,36 @@ func main() {
 		serveTemplate("./web/templates/chat.html")(w, r)
 	})
 
-	// Auth API routes
-	router.HandleFunc("POST /auth/register", authHandler.Register)
-	router.HandleFunc("POST /auth/login", authHandler.Login)
-	router.HandleFunc("POST /auth/refresh", authHandler.Refresh)
-	router.HandleFunc("POST /auth/logout", func(w http.ResponseWriter, r *http.Request) {
+	// Auth API routes - Using method check for Go 1.21 compatibility
+	router.HandleFunc("/auth/register", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		authHandler.Register(w, r)
+	})
+
+	router.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		authHandler.Login(w, r)
+	})
+
+	router.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		authHandler.Refresh(w, r)
+	})
+
+	router.HandleFunc("/auth/logout", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 		authMiddleware.Authenticate(http.HandlerFunc(authHandler.Logout)).ServeHTTP(w, r)
 	})
 
