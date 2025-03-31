@@ -11,6 +11,7 @@ database:
   password: ""
   dbname: chat_app
   sslmode: disable
+
 jwt:
   secret_key: "super-secret-key-that-is-at-least-32-characters"
   access_expiry: 15m

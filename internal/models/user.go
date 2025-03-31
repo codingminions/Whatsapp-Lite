@@ -25,6 +25,42 @@ type UserResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// UserInfo represents user information with online status
+type UserInfo struct {
+	ID           uuid.UUID `json:"user_id" db:"id"`
+	Username     string    `json:"username" db:"username"`
+	Status       string    `json:"-" db:"status"`
+	OnlineStatus bool      `json:"online_status"`
+	LastSeen     time.Time `json:"last_seen" db:"updated_at"`
+}
+
+// UserListResponse is the response for the user list endpoint
+type UserListResponse struct {
+	Users      []UserInfo `json:"users"`
+	Pagination Pagination `json:"pagination"`
+}
+
+// Pagination contains pagination information
+type Pagination struct {
+	Total    int `json:"total"`
+	Page     int `json:"page"`
+	Limit    int `json:"limit"`
+	NextPage int `json:"next_page"`
+}
+
+// Conversation represents a conversation in the API
+type Conversation struct {
+	ConversationID string   `json:"conversation_id"`
+	OtherUser      UserInfo `json:"other_user"`
+	LastMessage    Message  `json:"last_message"`
+	UnreadCount    int      `json:"unread_count"`
+}
+
+// ConversationListResponse is the response for the conversation list endpoint
+type ConversationListResponse struct {
+	Conversations []Conversation `json:"conversations"`
+}
+
 // RegisterRequest is the request body for user registration
 type RegisterRequest struct {
 	Email    string `json:"email" validate:"required,email"`

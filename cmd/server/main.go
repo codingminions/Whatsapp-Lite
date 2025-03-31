@@ -12,10 +12,14 @@ import (
 
 	"github.com/codingminions/Whatsapp-Lite/configs"
 	"github.com/codingminions/Whatsapp-Lite/internal/auth"
+	"github.com/codingminions/Whatsapp-Lite/internal/conversation"
+	"github.com/codingminions/Whatsapp-Lite/internal/user"
+	"github.com/codingminions/Whatsapp-Lite/internal/websocket"
 	"github.com/codingminions/Whatsapp-Lite/pkg/database"
 	"github.com/codingminions/Whatsapp-Lite/pkg/logger"
 	"github.com/codingminions/Whatsapp-Lite/pkg/token"
 	"github.com/codingminions/Whatsapp-Lite/pkg/validator"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -71,17 +75,34 @@ func main() {
 	authHandler := auth.NewHandler(authService, log, validate)
 	authMiddleware := auth.NewAuthMiddleware(tokenMaker, log)
 
+	// Initialize user components
+	userRepo := user.NewPostgresRepository(db)
+	userService := user.NewUserService(userRepo, log)
+	userHandler := user.NewHandler(userService, log)
+
+	// Initialize conversation components
+	convRepo := conversation.NewPostgresRepository(db, log)
+	convService := conversation.NewConversationService(convRepo, log)
+	convHandler := conversation.NewHandler(convService, log)
+
+	// Initialize WebSocket hub
+	wsHub := websocket.NewHub(log, convRepo)
+	wsHub.InitRouter() // Initialize the router after hub is created
+	wsHandler := websocket.NewHandler(wsHub, tokenMaker, log)
+
+	// Start WebSocket hub
+	go wsHub.Run()
+
 	// Initialize router
-	router := http.NewServeMux()
+	router := mux.NewRouter()
 
 	// Static files
-	fs := http.FileServer(http.Dir("./web/static"))
-	router.Handle("/static/", http.StripPrefix("/static/", fs))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static"))))
 
 	// Public routes
-	router.HandleFunc("/", serveTemplate("./web/templates/index.html"))
-	router.HandleFunc("/login", serveTemplate("./web/templates/login.html"))
-	router.HandleFunc("/register", serveTemplate("./web/templates/register.html"))
+	router.HandleFunc("/", serveTemplate("./web/templates/index.html")).Methods("GET")
+	router.HandleFunc("/login", serveTemplate("./web/templates/login.html")).Methods("GET")
+	router.HandleFunc("/register", serveTemplate("./web/templates/register.html")).Methods("GET")
 	router.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
 		// Simple auth check, redirect to login if not authenticated
 		cookie, err := r.Cookie("auth_token")
@@ -90,45 +111,42 @@ func main() {
 			return
 		}
 		serveTemplate("./web/templates/chat.html")(w, r)
-	})
+	}).Methods("GET")
 
-	// Auth API routes - Using method check for Go 1.21 compatibility
-	router.HandleFunc("/auth/register", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.Register(w, r)
-	})
+	// Auth API routes
+	router.HandleFunc("/auth/register", authHandler.Register).Methods("POST")
+	router.HandleFunc("/auth/login", authHandler.Login).Methods("POST")
+	router.HandleFunc("/auth/refresh", authHandler.Refresh).Methods("POST")
+	router.Handle("/auth/logout", authMiddleware.Authenticate(http.HandlerFunc(authHandler.Logout))).Methods("POST")
 
-	router.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.Login(w, r)
-	})
+	// User API routes
+	router.Handle("/users", authMiddleware.Authenticate(http.HandlerFunc(userHandler.GetUsers))).Methods("GET")
 
-	router.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.Refresh(w, r)
-	})
+	// Conversation API routes
+	router.Handle("/conversations", authMiddleware.Authenticate(http.HandlerFunc(convHandler.GetConversations))).Methods("GET")
+	router.Handle("/conversations/{conversation_id}/messages", authMiddleware.Authenticate(http.HandlerFunc(convHandler.GetMessages))).Methods("GET")
 
-	router.HandleFunc("/auth/logout", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		authMiddleware.Authenticate(http.HandlerFunc(authHandler.Logout)).ServeHTTP(w, r)
-	})
+	// WebSocket route
+	router.HandleFunc("/ws", wsHandler.ServeWS)
+
+	// Configure CORS if needed
+	// Uncomment and configure if needed for frontend development
+	/*
+		corsMiddleware := cors.New(cors.Options{
+			AllowedOrigins:   []string{"*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+			AllowCredentials: true,
+		})
+
+		// Apply CORS middleware
+		routerWithMiddleware := corsMiddleware.Handler(router)
+	*/
 
 	// Create server
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", config.Server.Port),
-		Handler:      router,
+		Handler:      router, // Change to routerWithMiddleware if using CORS
 		ReadTimeout:  config.Server.ReadTimeout,
 		WriteTimeout: config.Server.WriteTimeout,
 		IdleTimeout:  120 * time.Second,
