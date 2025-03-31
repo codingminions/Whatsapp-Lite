@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"
 )
 
 // PostgresConfig contains the configuration for a PostgreSQL connection
@@ -20,14 +21,14 @@ type PostgresConfig struct {
 
 // ConnectPostgres connects to a PostgreSQL database
 func ConnectPostgres(config PostgresConfig) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
-	)
+	// dsn := fmt.Sprintf(
+	// 	"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	// 	config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
+	// )
 
-	db, err := sqlx.Connect("postgres", dsn)
+	db, err := sqlx.Connect("postgres", "host=localhost port=5432 user=prateekkumar password='' dbname=chat_app sslmode=disable")
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		log.Fatal("Failed to connect to database", "error", err)
 	}
 
 	// Configure connection pool
