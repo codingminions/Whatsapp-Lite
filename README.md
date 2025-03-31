@@ -10,3 +10,7 @@ Real-time chat application written in Go, designed for seamless and efficient co
  - Run the main server: go run cmd/server/main.go
  - Head to http://localhost:8080 to register and login in your account
  - This application will support at least 1k concurrent users. 
+
+# Screenshots of the current state of the application:
+
+The screenshots of the existing state can be found at: https://github.com/codingminions/Whatsapp-Lite/tree/main/screenshots
