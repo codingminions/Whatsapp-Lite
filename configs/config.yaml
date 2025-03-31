@@ -1,0 +1,22 @@
+// configs/config.yaml
+server:
+  port: 8080
+  read_timeout: 5s
+  write_timeout: 10s
+  shutdown_timeout: 5s
+
+database:
+  host: localhost
+  port: 5432
+  user: prateekkumar
+  password: 
+  dbname: chat_app
+  sslmode: disable
+
+jwt:
+  secret_key: "super-secret-key-that-is-at-least-32-characters"
+  access_expiry: 15m   # 15 minutes
+  refresh_expiry: 24h  # 24 hours
+
+auth:
+  password_min_length: 8
