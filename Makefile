@@ -1,9 +1,10 @@
 # Postgres.app Installation Makefile for macOS
 # Variables
 POSTGRES_URL=https://github.com/PostgresApp/PostgresApp/releases/download/v2.8.1/Postgres-2.8.1-17.dmg
-POSTGRES_DMG=/Users/prateekkumar/Downloads/Postgres.dmg
+CURRENT_USER=$(shell whoami)
+POSTGRES_DMG=/Users/$(CURRENT_USER)/Downloads/Postgres.dmg
 APP_DIR=/Applications
-DB_URL=postgres://prateekkumar@localhost:5432/chat_app?sslmode=disable
+DB_URL=postgres://$(CURRENT_USER)@localhost:5432/chat_app?sslmode=disable
 
 .PHONY: postgres_install postgres_uninstall postgres_start postgres_stop \
 	    migrate-up migrate-down migrate-reset migrate-create migrate-version migrate-force \
@@ -89,10 +90,10 @@ db_setup:
 	@echo "==> Setting up chat application database..."
 	@echo "    Creating database 'chat_app'..."
 	createdb chat_app || echo "Database might already exist"
-	@echo "    Creating user 'prateekkumar'..."
-	psql postgres -c "CREATE USER prateekkumar;" || echo "User might already exist"
+	@echo "    Creating user '$(CURRENT_USER)'..."
+	psql postgres -c "CREATE USER $(CURRENT_USER);" || echo "User might already exist"
 	@echo "    Granting privileges..."
-	psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE chat_app TO prateekkumar;"
+	psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE chat_app TO $(CURRENT_USER);"
 	@echo "    Installing uuid-ossp extension..."
 	psql chat_app -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
 	@echo "==> Database setup complete! You can now run migrations."
@@ -104,7 +105,7 @@ db_reset:
 	@echo "    Creating database 'chat_app'..."
 	createdb chat_app
 	@echo "    Granting privileges..."
-	psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE chat_app TO prateekkumar;"
+	psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE chat_app TO $(CURRENT_USER);"
 	@echo "==> Database reset complete! You can now run migrations."
 
 # Migration commands
