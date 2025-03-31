@@ -1,0 +1,18 @@
+2025/03/31 05:34:45 Testing Connection: Config Specified Connection
+2025/03/31 05:34:45 Connection String: host=localhost port=5432 user=prateekkumar password='' dbname=chat_app sslmode=disable
+2025/03/31 05:34:45 Connected Database: chat_app
+2025/03/31 05:34:45 Table 'direct_messages' exists: true
+2025/03/31 05:34:45 Tables in public schema:
+2025/03/31 05:34:45 direct_messages
+2025/03/31 05:34:45 message_delivery_status
+2025/03/31 05:34:45 users
+2025/03/31 05:34:45 sessions
+2025/03/31 05:34:45 groups
+2025/03/31 05:34:45 group_members
+2025/03/31 05:34:45 schema_migrations
+2025/03/31 05:34:45 group_messages
+2025/03/31 05:34:45 Testing Connection: Default Username Database
+2025/03/31 05:34:45 Connection String: host=localhost port=5432 user=prateekkumar password='' sslmode=disable
+2025/03/31 05:34:45 Connected Database: prateekkumar
+2025/03/31 05:34:45 Table 'direct_messages' exists: false
+2025/03/31 05:34:45 Tables in public schema:
